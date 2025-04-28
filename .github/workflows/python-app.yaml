@@ -15,11 +15,8 @@ jobs:
         run: |
           pip install uv
           uv sync
-      - name: install ruff
-        run: |
-          pip install ruff
       - name: lint
         run: |
-          ruff check .
+          uv run ruff check .
 
 
