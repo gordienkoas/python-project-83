@@ -1,19 +1,22 @@
-name: Lint
+name: Python application
 
-on: [push, pull_request]
+on: [push]
 
 jobs:
-  lint:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.x'
+          python-version: '3.12'
       - name: Install dependencies
         run: |
-          pip install ruff
-      - name: Run ruff
+          pip install uv
+          uv sync
+      - name: Run linters
         run: |
           ruff check .
+
+
