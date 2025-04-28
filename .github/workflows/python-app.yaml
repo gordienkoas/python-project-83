@@ -15,7 +15,7 @@ jobs:
         run: |
           pip install uv
           uv sync
-      - name: Run linters
+      - name: lint
         run: |
           ruff check .
 
