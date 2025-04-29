@@ -1,0 +1,38 @@
+{% extends 'layout.html' %}
+{% block sidebar %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div>
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }}" role="alert">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    {% endwith %}
+{% endblock sidebar %}
+{% block content %}
+<!--Главная форма-->
+<body>
+    <div class="container py-3">
+        <div class="col-12 col-md-11 col-lg-8 mx-auto border rounded-3 bg-light p-5">
+                <h1 class="display-3">Анализатор страниц</h1>
+                <p class="lead">Бесплатно проверяйте сайты на SEO-пригодность</p>
+                <form action="{{ url_for('add_url') }}" method="post" class="d-flex justify-content-center">
+                    <div class="input-group input-group-lg">
+                        <input
+                            type="url"
+                            name="url"
+                            value="{{ url if url is defined else '' }}"
+                            placeholder="https://www.example.com"
+                            class="form-control form-control-lg"
+                            required
+                        >
+                        <input type="submit" value="Проверить" class="btn btn-primary btn-lg ms-3 px-5 text-uppercase mx-2">
+                    </div>
+                </form>
+        </div>
+    </div>
+</body>
+{% endblock %}
