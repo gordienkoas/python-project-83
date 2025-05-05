@@ -3,6 +3,7 @@ from flask import Flask, render_template, request, redirect, flash, url_for
 import psycopg2
 from dotenv import load_dotenv
 import validators
+from datetime import datetime
 
 load_dotenv()
 DATABASE_URL = os.getenv('DATABASE_URL')
@@ -57,25 +58,36 @@ def urls():
 @app.route('/urls/<int:url_id>', methods=['GET'])
 def url_detail(url_id):
     conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute('SELECT * FROM urls WHERE id = %s', (url_id,))
-    url = cur.fetchone()
-    cur.close()
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM urls WHERE id = %s', (url_id,))
+    url = cursor.fetchone()
+    cursor.close()
     conn.close()
-
     if url is None:
-        flash('URL не найден!', 'error')
+        flash('Сайт не найден.', 'error')
         return redirect(url_for('urls'))
+    return render_template('result.html', url=url)
 
-    return render_template('url_detail.html', url=url)
+
+@app.route('/urls/<int:url_id>/checks', methods=['POST'])
+def add_check(url_id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        # Здесь вы можете добавить логику для получения status_code, h1, title, description
+        # На данный момент заполняем только url_id и created_at
+        cursor.execute('INSERT INTO url_checks (url_id, created_at) VALUES (%s, %s)', (url_id, datetime.now()))
+        conn.commit()
+        flash('Проверка успешно добавлена!', 'success')
+    except Exception as e:
+        flash('Ошибка при добавлении проверки: ' + str(e), 'error')
+    finally:
+        cursor.close()
+        conn.close()
+
+    return redirect(url_for('url_detail', url_id=url_id))
 
 
 if __name__ == '__main__':
     app.run(debug=True)
 
-
-
-#
-# @app.route('/urls', methods=['POST'])
-# def add_url():
-#     pass
