@@ -47,8 +47,8 @@ def index():
 def urls():
     conn = get_db_connection()
     cur = conn.cursor()
-
     # Получение всех URL и последней проверки для каждого URL
+    cur.execute('SELECT * FROM urls ORDER BY created_at DESC')
     cur.execute('''
         SELECT u.id, u.name, u.created_at, 
                uc.status_code, uc.created_at AS last_check
