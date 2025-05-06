@@ -2,7 +2,7 @@
 [![Actions Status](https://github.com/gordienkoas/python-project-83/actions/workflows/hexlet-check.yml/badge.svg)](https://github.com/gordienkoas/python-project-83/actions)
 [![CI check](https://github.com/gordienkoas/python-project-83/actions/workflows/python-app.yaml/badge.svg)](https://github.com/gordienkoas/python-project-83/actions/workflows/python-app.yaml)
 
-##  Page Analyzer. THe third project school hexlet.io.
+##  Page Analyzer. Hexlet.io School's third project.
 
 Page Analyzer is a Flask web application that allows users to analyze web pages for SEO effectiveness. The application checks the availability of websites and analyzes elements such as headers, descriptions, and H1 tags.
 
