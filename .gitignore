@@ -1,7 +1,7 @@
 .python-version
 .venv
 .idea
-.env
+
 instance
 page_analyzer/__pycache__/
 __pycache__
