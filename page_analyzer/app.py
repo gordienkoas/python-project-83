@@ -1,9 +1,10 @@
 import os
 from flask import Flask, render_template, request, redirect, flash, url_for
+import requests
 import psycopg2
 from dotenv import load_dotenv
 import validators
-from datetime import datetime
+
 
 load_dotenv()
 DATABASE_URL = os.getenv('DATABASE_URL')
@@ -88,20 +89,38 @@ def url_detail(url_id):
 @app.route('/urls/<int:url_id>/checks', methods=['POST'])
 def add_check(url_id):
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cur = conn.cursor()
+
+    # Получаем URL из базы данных
+    cur.execute('SELECT name FROM urls WHERE id = %s', (url_id,))
+    url = cur.fetchone()
+
+    if url is None:
+        flash('URL не найден.')
+        return redirect(url_for('urls'))
+
+    url_name = url[0]
+
     try:
-        # Здесь вы можете добавить логику для получения status_code, h1, title, description
-        # На данный момент заполняем только url_id и created_at
-        cursor.execute('INSERT INTO url_checks (url_id, created_at) VALUES (%s, %s)', (url_id, datetime.now()))
+        response = requests.get(url_name)
+        response.raise_for_status()  # Проверка на ошибки HTTP
+        status_code = response.status_code
+
+        # Записываем код статуса в базу данных
+        cur.execute('INSERT INTO url_checks (url_id, status_code) VALUES (%s, %s)', (url_id, status_code))
         conn.commit()
-        flash('Проверка успешно добавлена!', 'success')
-    except Exception as e:
-        flash('Ошибка при добавлении проверки: ' + str(e), 'error')
+
+        flash(f'Проверка успешна! Код ответа: {status_code}')
+    except requests.exceptions.RequestException as e:
+        flash('Произошла ошибка при проверке.')
+        # Логируем ошибку, если нужно
+        print(f'Ошибка: {e}')
     finally:
-        cursor.close()
+        cur.close()
         conn.close()
 
-    return redirect(url_for('url_detail', url_id=url_id))
+    return redirect(url_for('urls'))
+
 
 
 if __name__ == '__main__':
