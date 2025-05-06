@@ -47,8 +47,22 @@ def index():
 def urls():
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute('SELECT * FROM urls ORDER BY created_at DESC')
+
+    # Получение всех URL и последней проверки для каждого URL
+    cur.execute('''
+        SELECT u.id, u.name, u.created_at, 
+               uc.status_code, uc.created_at AS last_check
+        FROM urls u
+        LEFT JOIN url_checks uc ON u.id = uc.url_id
+        WHERE uc.created_at = (
+            SELECT MAX(created_at) 
+            FROM url_checks 
+            WHERE url_id = u.id
+        )
+        ORDER BY u.created_at DESC
+    ''')
     urls = cur.fetchall()
+
     cur.close()
     conn.close()
 
@@ -61,12 +75,14 @@ def url_detail(url_id):
     cursor = conn.cursor()
     cursor.execute('SELECT * FROM urls WHERE id = %s', (url_id,))
     url = cursor.fetchone()
+    cursor.execute('SELECT * FROM url_checks WHERE url_id = %s', (url_id,))
+    checks = cursor.fetchall()
     cursor.close()
     conn.close()
     if url is None:
         flash('Сайт не найден.', 'error')
         return redirect(url_for('urls'))
-    return render_template('result.html', url=url)
+    return render_template('result.html', url=url, checks=checks)
 
 
 @app.route('/urls/<int:url_id>/checks', methods=['POST'])

@@ -7,9 +7,10 @@
         <thead class="table-light">
             <tr>
                 <th>ID</th>
-                <th>Имя</th>
-                <th>Последняя проверка</th>
-                <th>Код ответа</th>
+                <th>URL</th>
+                <th>Дата создания</th>
+                <th>Код статуса последней проверки</th>
+                <th>Дата последней проверки</th>
             </tr>
         </thead>
         <tbody>
@@ -18,7 +19,8 @@
                     <td>{{ url[0] }}</td>
                     <td><a href="{{ url_for('url_detail', url_id=url[0]) }}">{{ url[1] }}</a></td>
                     <td>{{ url[2] }}</td>
-                    <td>{{ url_id }}</td>
+                    <td>{{ url[3] if url[3] is not none else 'Нет проверок' }}</td>
+                    <td>{{ url[4] if url[4] is not none else 'Нет проверок' }}</td>
                 </tr>
             {% endfor %}
         </tbody>
