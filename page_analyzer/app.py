@@ -33,7 +33,7 @@ def index():
         try:
             cur.execute('INSERT INTO urls (name) VALUES (%s)', (url,))
             conn.commit()
-            flash('URL успешно добавлен!', 'success')
+            flash('Страница успешно добавлена', 'success')
         except psycopg2.IntegrityError:
             conn.rollback()
             flash('Этот URL уже существует!', 'error')
