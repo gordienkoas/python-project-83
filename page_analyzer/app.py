@@ -4,6 +4,8 @@ import requests
 import psycopg2
 from dotenv import load_dotenv
 import validators
+from bs4 import BeautifulSoup
+
 
 
 load_dotenv()
@@ -52,7 +54,8 @@ def urls():
     # Объединяем запросы для получения всех URL и последней проверки
     cur.execute('''
         SELECT u.id, u.name, u.created_at, 
-               uc.status_code, uc.created_at AS last_check
+               uc.status_code, uc.created_at AS last_check,
+               uc.h1, uc.title, uc.description
         FROM urls u
         LEFT JOIN url_checks uc ON u.id = uc.url_id
         AND uc.created_at = (
@@ -86,12 +89,11 @@ def url_detail(url_id):
     return render_template('result.html', url=url, checks=checks)
 
 
-@app.route('/urls/<int:url_id>/checks', methods=['POST'])
+@app.route('/check_url/<int:url_id>', methods=['POST'])
 def add_check(url_id):
     conn = get_db_connection()
     cur = conn.cursor()
 
-    # Получаем URL из базы данных
     cur.execute('SELECT name FROM urls WHERE id = %s', (url_id,))
     url = cur.fetchone()
 
@@ -104,23 +106,39 @@ def add_check(url_id):
     try:
         response = requests.get(url_name)
         response.raise_for_status()  # Проверка на ошибки HTTP
-        status_code = response.status_code
 
-        # Записываем код статуса в базу данных
-        cur.execute('INSERT INTO url_checks (url_id, status_code) VALUES (%s, %s)', (url_id, status_code))
-        conn.commit()
+        # Парсинг HTML с помощью BeautifulSoup
+        soup = BeautifulSoup(response.text, 'html.parser')
 
-        flash(f'Проверка успешна! Код ответа: {status_code}')
+        # Извлечение SEO-данных
+        h1_tag = soup.find('h1')
+        title_tag = soup.find('title')
+        description_tag = soup.find('meta', attrs={'name': 'description'})
+
+        h1_content = h1_tag.text if h1_tag else None
+        title_content = title_tag.text if title_tag else None
+        description_content = description_tag['content'] if description_tag else None
+
+
+        # Записываем код статуса и SEO-данные в базу данных
+        try:
+            cur.execute('''
+                INSERT INTO url_checks (url_id, status_code, h1, title, description) 
+                VALUES (%s, %s, %s, %s, %s)
+            ''', (url_id, response.status_code, h1_content, title_content, description_content))
+            conn.commit()
+        except Exception as e:
+            print(f'Ошибка при вставке данных: {e}')
+
+        flash(f'Проверка успешна! Код ответа: {response.status_code}')
     except requests.exceptions.RequestException as e:
         flash('Произошла ошибка при проверке.')
-        # Логируем ошибку, если нужно
         print(f'Ошибка: {e}')
     finally:
         cur.close()
         conn.close()
 
     return redirect(url_for('urls'))
-
 
 
 if __name__ == '__main__':

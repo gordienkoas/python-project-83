@@ -15,28 +15,35 @@
         {% endwith %}
 <div class="container mt-5">
     <h1 class="mb-4">Сайты</h1>
-    <table data-test="urls" class="table table-bordered table-hover">
-        <thead class="table-light">
+    <table class="table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>URL</th>
+            <th>Дата создания</th>
+            <th>Код последней проверки</th>
+            <th>Дата последней проверки</th>
+            <th>H1</th>
+            <th>Title</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for url in urls %}
             <tr>
-                <th>ID</th>
-                <th>URL</th>
-                <th>Дата создания</th>
-                <th>Код статуса последней проверки</th>
-                <th>Дата последней проверки</th>
+                <td>{{ url[0] }}</td>
+                <td><a href="{{ url_for('url_detail', url_id=url[0]) }}">{{ url[1] }}</a></td>
+                <td>{{ url[2] }}</td>
+                <td>{{ url[3] if url[3] is not none else 'Нет проверок' }}</td>
+                <td>{{ url[4] if url[4] is not none else 'Нет проверок' }}</td>
+                <td>{{ url[5] if url[5] is not none else 'Нет данных' }}</td>
+                <td>{{ url[6] if url[6] is not none else 'Нет данных' }}</td>
+                <td>{{ url[7] if url[7] is not none else 'Нет данных' }}</td>
             </tr>
-        </thead>
-        <tbody>
-            {% for url in urls %}
-                <tr>
-                    <td>{{ url[0] }}</td>
-                    <td><a href="{{ url_for('url_detail', url_id=url[0]) }}">{{ url[1] }}</a></td>
-                    <td>{{ url[2] }}</td>
-                    <td>{{ url[3] if url[3] is not none else 'Нет проверок' }}</td>
-                    <td>{{ url[4] if url[4] is not none else 'Нет проверок' }}</td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+        {% endfor %}
+    </tbody>
+</table>
+
     <a href="{{ url_for('index') }}" class="btn btn-secondary">Назад</a>
 </div>
 {% endblock %}
