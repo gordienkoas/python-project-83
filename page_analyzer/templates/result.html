@@ -1,0 +1,49 @@
+{% extends 'layout.html' %}
+{% block sidebar %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div>
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }}" role="alert">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    {% endwith %}
+{% endblock sidebar %}
+{% block content %}
+<body>
+    <div class="container mt-4">
+        <h1>Детали URL</h1>
+        <p><strong>ID:</strong> {{ url[0] }}</p>
+        <p><strong>Название:</strong> {{ url[1] }}</p> <!-- name -->
+        <p><strong>Дата создания:</strong> {{ url[2] }}</p> <!-- created_at -->
+
+        <form method="POST" action="{{ url_for('add_check', url_id=url[0]) }}">
+            <button type="submit" class="btn btn-primary">Добавить проверку</button>
+        </form>
+
+        <h2>Проверки:</h2>
+        <table class="table" data-test="checks">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Дата проверки</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for check in checks %}
+                <tr>
+                    <td>{{ check[0] }}</td>
+                    <td>{{ check[6] }}</td> <!-- created_at -->
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <a href="{{ url_for('urls') }}" class="btn btn-secondary">Назад к списку</a>
+    </div>
+</body>
+</html>
+{% endblock %}
