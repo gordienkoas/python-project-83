@@ -25,23 +25,38 @@ def index():
     if request.method == 'POST':
         url = request.form['url']
         if not validators.url(url) or len(url) > 255:
-            flash('Неверный URL-адрес!', 'error')
+            flash('Некорректный URL', 'error')
             return redirect(url_for('index'))
 
         conn = get_db_connection()
         cur = conn.cursor()
         try:
+            # Проверяем, существует ли уже этот URL
+            cur.execute('SELECT id FROM urls WHERE name = %s', (url,))
+            existing_url = cur.fetchone()
+
+            if existing_url:
+                # Если URL уже существует, перенаправляем на его детали
+                url_id = existing_url[0]
+                flash('Страница уже существует', 'error')
+                return redirect(url_for('url_detail', url_id=url_id))
+
+            # Если URL не существует, добавляем его
             cur.execute('INSERT INTO urls (name) VALUES (%s)', (url,))
             conn.commit()
             flash('Страница успешно добавлена', 'success')
-        except psycopg2.IntegrityError:
+
+            # Получаем ID добавленного URL для перенаправления
+            cur.execute('SELECT id FROM urls WHERE name = %s', (url,))
+            url_id = cur.fetchone()[0]
+
+            return redirect(url_for('url_detail', url_id=url_id))
+        except Exception as e:
             conn.rollback()
-            flash('Этот URL уже существует!', 'error')
+            flash(f'Произошла ошибка: {str(e)}', 'error')
         finally:
             cur.close()
             conn.close()
-
-        return redirect(url_for('index'))
 
     return render_template('index.html')
 
