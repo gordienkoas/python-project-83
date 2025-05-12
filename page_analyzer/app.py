@@ -12,7 +12,7 @@ load_dotenv()
 DATABASE_URL = os.getenv('DATABASE_URL')
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key'  # Замените на ваш секретный ключ
+app.secret_key = 'SECRETFORMYPROJECT007'
 
 
 def get_db_connection():
@@ -136,24 +136,20 @@ def add_check(url_id):
 
 
         # Записываем код статуса и SEO-данные в базу данных
-        try:
-            cur.execute('''
-                INSERT INTO url_checks (url_id, status_code, h1, title, description) 
-                VALUES (%s, %s, %s, %s, %s)
-            ''', (url_id, response.status_code, h1_content, title_content, description_content))
-            conn.commit()
-        except Exception as e:
-            print(f'Ошибка при вставке данных: {e}')
 
-        flash(f'Проверка успешна! Код ответа: {response.status_code}')
-    except requests.exceptions.RequestException as e:
+        cur.execute('''
+            INSERT INTO url_checks (url_id, status_code, h1, title, description) 
+            VALUES (%s, %s, %s, %s, %s)
+            ''', (url_id, response.status_code, h1_content, title_content, description_content))
+        conn.commit()
+        flash('Страница успешно проверена')
+    except requests.exceptions.RequestException:
         flash('Произошла ошибка при проверке.')
-        print(f'Ошибка: {e}')
     finally:
         cur.close()
         conn.close()
 
-    return redirect(url_for('urls'))
+    return redirect(url_for('url_detail', url_id=url_id))
 
 
 if __name__ == '__main__':
