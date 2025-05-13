@@ -29,14 +29,22 @@
             <thead>
                 <tr>
                     <th>ID</th>
-                    <th>Дата проверки</th>
+                    <th>Код ответа</th>
+                    <th>h1</th>
+                    <th>title</th>
+                    <th>Description</th>
+                    <th>Дата создания</th>
                 </tr>
             </thead>
             <tbody>
                 {% for check in checks %}
                 <tr>
                     <td>{{ check[0] }}</td>
-                    <td>{{ check[6] }}</td> <!-- created_at -->
+                    <td>{{ check[2] }}</td>
+                    <td>{{ check[3] }}</td>
+                    <td>{{ check[4] }}</td>
+                    <td>{{ check[5] }}</td>
+                    <td>{{ check[6] }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
