@@ -103,7 +103,6 @@ def url_detail(url_id):
     return render_template('result.html', url=url, checks=checks)
 
 
-from urllib.parse import urlparse
 
 @app.route('/check_url/<int:url_id>', methods=['POST'])
 def add_check(url_id):
@@ -148,7 +147,7 @@ def add_check(url_id):
 
         conn.commit()
         flash('Страница успешно проверена', 'success')
-    except Exception as e:
+    except Exception:
         conn.rollback()
         flash('Произошла ошибка при проверке', 'error')
     finally:
