@@ -22,8 +22,11 @@ def get_db_connection():
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
-        url = request.form['url']
-        return redirect(url_for('urls', url=url))
+        url_input = request.form.get('url')
+        if not validators.url(url_input) or len(url_input) > 255:
+            flash('Некорректный URL', 'error')
+            return render_template('index.html'), 422
+        return redirect(url_for('urls', url=url_input))
     return render_template('index.html')
 
 @app.route('/urls', methods=['GET', 'POST'])
