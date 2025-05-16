@@ -25,7 +25,9 @@ def index():
         url_input = request.form.get('url')
         if not validators.url(url_input) or len(url_input) > 255:
             flash('Некорректный URL', 'error')
+            # Можно оставить так: просто рендерим страницу с ошибкой
             return render_template('index.html'), 422
+        # Валидный URL — делаем редирект
         return redirect(url_for('urls', url=url_input))
     return render_template('index.html')
 
