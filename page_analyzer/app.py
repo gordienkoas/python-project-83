@@ -22,17 +22,19 @@ def get_db_connection():
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
-        url = request.form['url']
+        url = request.form.get('url')
         return redirect(url_for('urls', url=url))
     return render_template('index.html')
 
 @app.route('/urls', methods=['GET', 'POST'])
 def urls():
     if request.method == 'POST':
-        url = request.form['url']
+        url = request.form.get('url')
+
+        # Проверка валидности URL
         if not validators.url(url) or len(url) > 255:
             flash('Некорректный URL', 'error')
-            return render_template('index.html'), 422  # Возвращаем ошибку 422 с HTML
+            return redirect(url_for('index')), 422  # Возвращаем ошибку 422 с переадресацией на главную страницу
 
         domain = urlparse(url).netloc
 
@@ -56,36 +58,13 @@ def urls():
                 except Exception as e:
                     conn.rollback()
                     flash(f'Произошла ошибка: {str(e)}', 'error')
+                    return redirect(url_for('index')), 500  # Возвращаем ошибку 500 с переадресацией на главную страницу
 
     else:
+        # Обработка GET-запроса
         url = request.args.get('url')
         if url:
-            if not validators.url(url) or len(url) > 255:
-                flash('Некорректный URL', 'error')
-                return render_template('index.html'), 422  # Возвращаем ошибку 422 с HTML
-
-            domain = urlparse(url).netloc
-
-            with get_db_connection() as conn:
-                with conn.cursor() as cur:
-                    try:
-                        cur.execute('SELECT id FROM urls WHERE name = %s', (domain,))
-                        existing_url = cur.fetchone()
-
-                        if existing_url:
-                            url_id = existing_url[0]
-                            flash('Страница уже существует', 'error')
-                            return redirect(url_for('url_detail', url_id=url_id))
-
-                        cur.execute('INSERT INTO urls (name) VALUES (%s) RETURNING id', (domain,))
-                        url_id = cur.fetchone()[0]
-                        conn.commit()
-                        flash('Страница успешно добавлена', 'success')
-
-                        return redirect(url_for('url_detail', url_id=url_id))
-                    except Exception as e:
-                        conn.rollback()
-                        flash(f'Произошла ошибка: {str(e)}', 'error')
+            return redirect(url_for('urls'))  # Если URL передан, просто перенаправляем на тот же маршрут
 
         with get_db_connection() as conn:
             with conn.cursor() as cur:
@@ -103,6 +82,8 @@ def urls():
                 ''')
                 urls = cur.fetchall()
                 return render_template('urls.html', urls=urls)
+
+
 
 
 @app.route('/urls/<int:url_id>', methods=['GET'])
