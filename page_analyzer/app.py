@@ -23,8 +23,9 @@ def get_db_connection():
 def index():
     if request.method == 'POST':
         url_input = request.form.get('url')
+        # Проверка валидности
         if not validators.url(url_input) or len(url_input) > 255:
-            # вызываем /urls явно или делаем редирект
+            # Вместо рендера ошибки — редирект на /urls с этим же URL
             return redirect(url_for('urls', url=url_input))
         return redirect(url_for('urls', url=url_input))
     return render_template('index.html')
