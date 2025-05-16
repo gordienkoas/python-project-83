@@ -31,7 +31,6 @@ def urls():
     if request.method == 'POST':
         url = request.form.get('url')
 
-        # Проверка валидности URL
         if not validators.url(url) or len(url) > 255:
             flash('Некорректный URL', 'error')
             return redirect(url_for('index')), 422  # Возвращаем ошибку 422 с переадресацией на главную страницу
