@@ -59,9 +59,12 @@ def create_url():
 
                         if base_input_domain == base_existing_domain:
                             flash('Страница уже существует', 'error')
-                            return redirect(url_for('url_detail', url_id=existing_url[0]))
+                            return redirect(url_for('url_detail',
+                                                    url_id=existing_url[0]))
 
-            cur.execute('INSERT INTO urls (name) VALUES (%s) RETURNING id', (normalized_url,))
+            cur.execute('INSERT INTO urls (name) '
+                        'VALUES (%s) RETURNING id',
+                        (normalized_url,))
             url_id = cur.fetchone()[0]
             conn.commit()
             flash('Страница успешно добавлена', 'success')
@@ -143,8 +146,6 @@ def add_check(url_id):
         title_content = title_tag.text if title_tag else None
         description_content = description_tag['content'] \
             if description_tag else None
-
-
         cur.execute(
             '''
             INSERT INTO url_checks 
