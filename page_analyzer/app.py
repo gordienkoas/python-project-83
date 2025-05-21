@@ -11,7 +11,7 @@ load_dotenv()
 DATABASE_URL = os.getenv('DATABASE_URL')
 
 app = Flask(__name__)
-app.secret_key = 'SECRETFORMYPROJECT007'
+app.secret_key = os.getenv('SECRET_KEY')
 
 
 def get_db_connection():
@@ -19,70 +19,68 @@ def get_db_connection():
     return conn
 
 
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/', methods=['GET'])
 def index():
-    if request.method == 'POST':
-        url_input = request.form.get('url')
-        # Проверка валидности
-        if not validators.url(url_input) or len(url_input) > 255:
-            # Редирект на /urls с этим же URL
-            return redirect(url_for('urls', url=url_input))
-        else:
-            return redirect(url_for('urls', url=url_input))
     return render_template('index.html')
 
-@app.route('/urls', methods=['GET', 'POST'])
-def urls():
-    if request.method == 'POST':
-        url = request.form['url']
-        return redirect(url_for('urls', url=url))
-    else:
-        url = request.args.get('url')
-        if url:
-            if not validators.url(url) or len(url) > 255:
-                flash('Некорректный URL', 'error')
-                return render_template('index.html'), 422  # Возвращаем ошибку 422 с HTML
 
-            domain = urlparse(url).netloc
+@app.route('/urls', methods=['POST'])
+def create_url():
+    url_input = request.form.get('url')
+    error_message = None
 
-            with get_db_connection() as conn:
-                with conn.cursor() as cur:
-                    try:
-                        cur.execute('SELECT id FROM urls WHERE name = %s', (domain,))
-                        existing_url = cur.fetchone()
+    # Валидация URL
+    if not url_input or len(url_input) > 255:
+        error_message = "Некорректный URL или превышена длина 255 символов."
+    elif not validators.url(url_input):
+        error_message = "Некорректный URL."
 
-                        if existing_url:
-                            url_id = existing_url[0]
-                            flash('Страница уже существует', 'error')
-                            return redirect(url_for('url_detail', url_id=url_id))
+    if error_message:
+        flash(error_message, 'error')
+        return render_template('index.html', url=url_input), 422  # Возвращаем ошибку 422 с HTML
 
-                        cur.execute('INSERT INTO urls (name) VALUES (%s) RETURNING id', (domain,))
-                        url_id = cur.fetchone()[0]
-                        conn.commit()
-                        flash('Страница успешно добавлена', 'success')
+    # Нормализация URL
+    normalized_url = url_input.strip()
 
-                        return redirect(url_for('url_detail', url_id=url_id))
-                    except Exception as e:
-                        conn.rollback()
-                        flash(f'Произошла ошибка: {str(e)}', 'error')
+    # Проверка на наличие URL в базе данных
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute('SELECT id FROM urls WHERE name = %s', (normalized_url,))
+            existing_url = cur.fetchone()
 
-        # Если URL не передан, или если запрос POST без URL, получаем все URL из БД
-        with get_db_connection() as conn:
-            with conn.cursor() as cur:
-                cur.execute('''
-                    SELECT u.id, u.name, u.created_at,
-                           uc.status_code, uc.created_at AS last_check,
-                           uc.h1, uc.title, uc.description
-                    FROM urls u
-                    LEFT JOIN url_checks uc ON u.id = uc.url_id
-                    AND uc.created_at = (
-                        SELECT MAX(created_at)
-                        FROM url_checks 
-                        WHERE url_id = u.id
-                    )
-                ''')
-                urls = cur.fetchall()
-                return render_template('urls.html', urls=urls)
+            if existing_url:
+                url_id = existing_url[0]
+                flash('Страница уже существует', 'error')
+                return redirect(url_for('url_detail', url_id=url_id))
+
+            # Сохранение нового URL в базу данных
+            cur.execute('INSERT INTO urls (name) VALUES (%s) RETURNING id', (normalized_url,))
+            url_id = cur.fetchone()[0]
+            conn.commit()
+            flash('Страница успешно добавлена', 'success')
+
+            return redirect(url_for('url_detail', url_id=url_id))
+
+
+@app.route('/urls', methods=['GET'])
+def list_urls():
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute('''
+                SELECT u.id, u.name, u.created_at,
+                       uc.status_code, uc.created_at AS last_check,
+                       uc.h1, uc.title, uc.description
+                FROM urls u
+                LEFT JOIN url_checks uc ON u.id = uc.url_id
+                AND uc.created_at = (
+                    SELECT MAX(created_at)
+                    FROM url_checks 
+                    WHERE url_id = u.id
+                )
+            ''')
+            urls = cur.fetchall()
+            return render_template('urls.html', urls=urls)
+
 
 
 
