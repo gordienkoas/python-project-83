@@ -41,17 +41,26 @@ def create_url():
 
     # Нормализация URL
     normalized_url = url_input.strip()
+    parsed_input_url = urlparse(normalized_url)
+    base_input_domain = f"{parsed_input_url.scheme}://{parsed_input_url.netloc}"
 
     # Проверка на наличие URL в базе данных
     with get_db_connection() as conn:
         with conn.cursor() as cur:
-            cur.execute('SELECT id FROM urls WHERE name = %s', (normalized_url,))
-            existing_url = cur.fetchone()
+            cur.execute('SELECT id, name FROM urls')
+            existing_urls = cur.fetchall()
 
-            if existing_url:
-                url_id = existing_url[0]
-                flash('Страница уже существует', 'error')
-                return redirect(url_for('url_detail', url_id=url_id))
+            # Проверяем, если в базе данных есть URL
+            if existing_urls:
+                for existing_url in existing_urls:
+                    # Убедитесь, что у вас есть правильный доступ к элементам
+                    if len(existing_url) > 1:  # Проверяем, что у нас есть как минимум 2 элемента
+                        parsed_existing_url = urlparse(existing_url[1])
+                        base_existing_domain = f"{parsed_existing_url.scheme}://{parsed_existing_url.netloc}"
+
+                        if base_input_domain == base_existing_domain:
+                            flash('Страница уже существует', 'error')
+                            return redirect(url_for('url_detail', url_id=existing_url[0]))
 
             # Сохранение нового URL в базу данных
             cur.execute('INSERT INTO urls (name) VALUES (%s) RETURNING id', (normalized_url,))
