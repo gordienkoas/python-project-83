@@ -37,7 +37,7 @@ def create_url():
 
     if error_message:
         flash(error_message, 'error')
-        return render_template('index.html', url=url_input), 422  # Возвращаем ошибку 422 с HTML
+        return render_template('index.html', url=url_input), 422
 
     # Нормализация URL
     normalized_url = url_input.strip()
@@ -53,8 +53,7 @@ def create_url():
             # Проверяем, если в базе данных есть URL
             if existing_urls:
                 for existing_url in existing_urls:
-                    # Убедитесь, что у вас есть правильный доступ к элементам
-                    if len(existing_url) > 1:  # Проверяем, что у нас есть как минимум 2 элемента
+                    if len(existing_url) > 1:
                         parsed_existing_url = urlparse(existing_url[1])
                         base_existing_domain = f"{parsed_existing_url.scheme}://{parsed_existing_url.netloc}"
 
