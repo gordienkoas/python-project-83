@@ -61,12 +61,10 @@ def create_url():
                             flash('Страница уже существует', 'error')
                             return redirect(url_for('url_detail', url_id=existing_url[0]))
 
-            # Сохранение нового URL в базу данных
             cur.execute('INSERT INTO urls (name) VALUES (%s) RETURNING id', (normalized_url,))
             url_id = cur.fetchone()[0]
             conn.commit()
             flash('Страница успешно добавлена', 'success')
-
             return redirect(url_for('url_detail', url_id=url_id))
 
 
@@ -90,15 +88,15 @@ def list_urls():
             return render_template('urls.html', urls=urls)
 
 
-
-
 @app.route('/urls/<int:url_id>', methods=['GET'])
 def url_detail(url_id):
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute('SELECT * FROM urls WHERE id = %s', (url_id,))
     url_record = cursor.fetchone()
-    cursor.execute('SELECT * FROM url_checks WHERE url_id = %s ORDER BY created_at DESC', (url_id,))
+    cursor.execute('SELECT * FROM url_checks '
+                   'WHERE url_id = %s ORDER BY created_at DESC',
+                   (url_id,))
     checks = cursor.fetchall()
     cursor.close()
     conn.close()
@@ -143,15 +141,18 @@ def add_check(url_id):
 
         h1_content = h1_tag.text if h1_tag else None
         title_content = title_tag.text if title_tag else None
-        description_content = description_tag['content'] if description_tag else None
+        description_content = description_tag['content'] \
+            if description_tag else None
 
-        # Записываем код статуса и SEO-данные в базу данных
+
         cur.execute(
             '''
-            INSERT INTO url_checks (url_id, status_code, h1, title, description) 
+            INSERT INTO url_checks 
+            (url_id, status_code, h1, title, description) 
             VALUES (%s, %s, %s, %s, %s)
             ''',
-            (url_id, response.status_code, h1_content, title_content, description_content)
+            (url_id, response.status_code, h1_content,
+             title_content, description_content)
         )
 
         conn.commit()
