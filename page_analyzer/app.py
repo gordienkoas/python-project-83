@@ -3,13 +3,15 @@ from flask import Flask, render_template, request, redirect, flash, url_for
 import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse
-from page_analyzer.data_base import save_url, get_existing_urls, get_db_connection
+from page_analyzer.data_base import (save_url, get_existing_urls,
+                                     get_db_connection)
 from page_analyzer.parser import parse_url
 from page_analyzer.url_validator import validate_url
 
 
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY')
+
 
 @app.route('/', methods=['GET'])
 def index():

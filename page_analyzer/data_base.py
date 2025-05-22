@@ -14,10 +14,12 @@ def get_db_connection():
 def save_url(url):
     with get_db_connection() as conn:
         with conn.cursor() as cur:
-            cur.execute('INSERT INTO urls (name) VALUES (%s) RETURNING id', (url,))
+            cur.execute('INSERT INTO urls (name)'
+                        ' VALUES (%s) RETURNING id', (url,))
             url_id = cur.fetchone()[0]
             conn.commit()
             return url_id
+
 
 def get_existing_urls():
     with get_db_connection() as conn:
