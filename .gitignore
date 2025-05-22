@@ -2,6 +2,6 @@
 .venv
 .idea
 
-instance
+page_analyzer/instance
 page_analyzer/__pycache__/
 __pycache__

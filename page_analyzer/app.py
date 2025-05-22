@@ -1,23 +1,15 @@
 import os
 from flask import Flask, render_template, request, redirect, flash, url_for
 import requests
-import psycopg2
-from dotenv import load_dotenv
-import validators
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse
+from page_analyzer.data_base import save_url, get_existing_urls, get_db_connection
+from page_analyzer.parser import parse_url
+from page_analyzer.url_validator import validate_url
 
-load_dotenv()
-DATABASE_URL = os.getenv('DATABASE_URL')
 
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY')
-
-
-def get_db_connection():
-    conn = psycopg2.connect(DATABASE_URL)
-    return conn
-
 
 @app.route('/', methods=['GET'])
 def index():
@@ -27,48 +19,20 @@ def index():
 @app.route('/urls', methods=['POST'])
 def create_url():
     url_input = request.form.get('url')
-    error_message = None
-
-    # Валидация URL
-    if not url_input or len(url_input) > 255:
-        error_message = "Некорректный URL или превышена длина 255 символов."
-    elif not validators.url(url_input):
-        error_message = "Некорректный URL."
-
+    error_message = validate_url(url_input)
     if error_message:
         flash(error_message, 'error')
         return render_template('index.html', url=url_input), 422
-
-    # Нормализация URL
-    normalized_url = url_input.strip()
-    parsed_input_url = urlparse(normalized_url)
-    base_input_domain = f"{parsed_input_url.scheme}://{parsed_input_url.netloc}"
-
-    # Проверка на наличие URL в базе данных
-    with get_db_connection() as conn:
-        with conn.cursor() as cur:
-            cur.execute('SELECT id, name FROM urls')
-            existing_urls = cur.fetchall()
-
-            # Проверяем, если в базе данных есть URL
-            if existing_urls:
-                for existing_url in existing_urls:
-                    if len(existing_url) > 1:
-                        parsed_existing_url = urlparse(existing_url[1])
-                        base_existing_domain = f"{parsed_existing_url.scheme}://{parsed_existing_url.netloc}"
-
-                        if base_input_domain == base_existing_domain:
-                            flash('Страница уже существует', 'error')
-                            return redirect(url_for('url_detail',
-                                                    url_id=existing_url[0]))
-
-            cur.execute('INSERT INTO urls (name) '
-                        'VALUES (%s) RETURNING id',
-                        (normalized_url,))
-            url_id = cur.fetchone()[0]
-            conn.commit()
-            flash('Страница успешно добавлена', 'success')
-            return redirect(url_for('url_detail', url_id=url_id))
+    base_input_domain = parse_url(url_input)
+    existing_urls = get_existing_urls()
+    if existing_urls:
+        for existing_url in existing_urls:
+            if base_input_domain == parse_url(existing_url[1]):
+                flash('Страница уже существует', 'error')
+                return redirect(url_for('url_detail', url_id=existing_url[0]))
+    url_id = save_url(url_input)
+    flash('Страница успешно добавлена', 'success')
+    return redirect(url_for('url_detail', url_id=url_id))
 
 
 @app.route('/urls', methods=['GET'])
