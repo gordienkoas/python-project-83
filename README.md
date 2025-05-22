@@ -1,6 +1,7 @@
 ### Hexlet tests and linter status:
 [![Actions Status](https://github.com/gordienkoas/python-project-83/actions/workflows/hexlet-check.yml/badge.svg)](https://github.com/gordienkoas/python-project-83/actions)
 [![CI check](https://github.com/gordienkoas/python-project-83/actions/workflows/python-app.yaml/badge.svg)](https://github.com/gordienkoas/python-project-83/actions/workflows/python-app.yaml)
+[![SonarQube](https://sonarcloud.io/api/project_badges/measure?project=gordienkoas_python-project-83&metric=alert_status)]((https://sonarcloud.io/api/project_badges/measure?project=gordienkoas_python-project-83&metric=alert_status))
 
 ##  Page Analyzer. Hexlet.io School's third project.
 
